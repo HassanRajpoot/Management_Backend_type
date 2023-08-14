@@ -1,5 +1,5 @@
 import jwt from "jsonwebtoken";
-import { User } from "db/user";
+import { User } from "../db/user";
 import { SECRET_KEY } from "..";
 import express, {Request, Response} from 'express';
 export const sendCookie = (
