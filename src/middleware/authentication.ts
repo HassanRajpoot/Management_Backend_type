@@ -1,7 +1,7 @@
 import jwt from "jsonwebtoken";
 import express from 'express'
 import { User } from "../db/user"; // Assuming you have the correct import path
-import { SECRET_KEY } from "../index";
+import { SECRET_KEY } from "..";
 
 declare module 'express' {
   interface Request {

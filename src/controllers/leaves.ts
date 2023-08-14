@@ -1,7 +1,10 @@
 import { Attendance, Employee } from '../db/employee';
 import express from 'express'
+import { isAuthenticated } from '../middleware/authentication';
 
-export const createAttendance = async (req:express.Request, res:express.Response) => {
+const router = express.Router();
+
+router.post('/new', isAuthenticated, async (req:express.Request, res:express.Response) => {
   try {
     const { employeeId, date, checkInTime, checkOutTime } = req.body;
 
@@ -34,4 +37,7 @@ export const createAttendance = async (req:express.Request, res:express.Response
   } catch (error) {
     res.status(400).json({ error: 'Bad request' });
   }
-};
+});
+
+
+module.exports = router;

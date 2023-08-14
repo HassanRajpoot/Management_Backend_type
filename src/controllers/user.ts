@@ -3,8 +3,11 @@ import bcrypt from "bcrypt";
 import { sendCookie } from "../utils/features";
 import ErrorHandler from "../middleware/error";
 import { Request, Response, NextFunction } from "express";
+import express from "express";
 
-export const login = async (req: Request, res: Response, next: NextFunction) => {
+const router = express.Router();
+
+router.post("/login",async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { email, password } = req.body;
 
@@ -21,9 +24,9 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
   } catch (error) {
     next(error);
   }
-};
+});
 
-export const register = async (req: Request, res: Response, next: NextFunction) => {
+router.post("/new",async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { name, email, password } = req.body;
 
@@ -39,9 +42,9 @@ export const register = async (req: Request, res: Response, next: NextFunction) 
   } catch (error) {
     next(error);
   }
-};
+});
 
-export const logout = (req: Request, res: Response, next: NextFunction) => {
+router.get("/logout",(req: Request, res: Response, next: NextFunction) => {
   res
     .status(200)
     .cookie("token", "", {
@@ -50,4 +53,6 @@ export const logout = (req: Request, res: Response, next: NextFunction) => {
     .json({
       success: true,
     });
-};
+});
+
+module.exports = router;

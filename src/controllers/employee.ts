@@ -1,7 +1,10 @@
 import { Employee } from '../db/employee';
 import express from 'express';
+import { isAuthenticated } from "../middleware/authentication";
 
-export const NewEmployee = async (req: express.Request, res: express.Response) => {
+const router = express.Router();
+
+router.post('/new',isAuthenticated,async (req: express.Request, res: express.Response) => {
     try {
         const { firstName, lastName, dateOfBirth, gender, contact, address, cnic, numberLeaves } = req.body;
         const contactNo = await Employee.findOne({ cnic });
@@ -24,20 +27,20 @@ export const NewEmployee = async (req: express.Request, res: express.Response) =
     } catch (error) {
         res.status(400).json({ message: error.message });
     }
-};
+});
 
 // Read all employees
-export const ReadEmployee = async (req: express.Request, res: express.Response) => {
+router.get('/all',isAuthenticated,async (req: express.Request, res: express.Response) => {
     try {
         const employees = await Employee.find();
         res.json(employees);
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
-};
+});
 
 // Read a specific employee
-export const ReadEmployeeById = async (req: express.Request, res: express.Response) => {
+router.get('/:id',isAuthenticated,async (req: express.Request, res: express.Response) => {
     try {
         const employee = await Employee.findById(req.params.id);
         if (!employee) {
@@ -47,10 +50,10 @@ export const ReadEmployeeById = async (req: express.Request, res: express.Respon
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
-};
+});
 
 // Update an employee
-export const UpdateEmployee = async (req: express.Request, res: express.Response) => {
+router.put('/update_employees/:id',isAuthenticated,async (req: express.Request, res: express.Response) => {
     try {
         const { firstName, lastName, dateOfBirth, gender, contact, address, cnic, numberLeaves } = req.body;
         const EmployeeId = req.params.id;
@@ -71,10 +74,10 @@ export const UpdateEmployee = async (req: express.Request, res: express.Response
     } catch (error) {
         res.status(400).json({ message: error.message });
     }
-};
+});
 
 // Delete an employee
-export const DeleteEMployee = async (req: express.Request, res: express.Response) => {
+router.delete('/delete_employees/:id',isAuthenticated,async (req: express.Request, res: express.Response) => {
     try {
         const employeeId = req.params.id;
         const deletedEmployee = await Employee.findByIdAndRemove(employeeId);
@@ -85,4 +88,6 @@ export const DeleteEMployee = async (req: express.Request, res: express.Response
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
-};
+});
+
+module.exports = router;

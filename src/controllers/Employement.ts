@@ -1,7 +1,10 @@
 import { Employment } from '../db/employee';
 import express from 'express'
+import { isAuthenticated } from "../middleware/authentication";
 
-export const getAllEmployments = async (req:express.Request, res:express.Response) => {
+const router = express.Router()
+
+router.get('/all', isAuthenticated,async (req:express.Request, res:express.Response) => {
   try {
     const employments = await Employment.find()
       .populate('employeeId')
@@ -11,18 +14,18 @@ export const getAllEmployments = async (req:express.Request, res:express.Respons
   } catch (error) {
     res.status(500).json({ error: 'Internal server error' });
   }
-};
+});
 
-export const createEmployment = async (req:express.Request, res:express.Response) => {
+router.post('/new', isAuthenticated,async (req:express.Request, res:express.Response) => {
   try {
     const newEmployment = await Employment.create(req.body);
     res.status(201).json(newEmployment);
   } catch (error) {
     res.status(400).json({ error: 'Bad request' });
   }
-};
+});
 
-export const updateEmployment = async (req:express.Request, res:express.Response) => {
+router.put('/update_employments/:id', isAuthenticated,async (req:express.Request, res:express.Response) => {
   try {
     const updatedEmployment = await Employment.findByIdAndUpdate(
       req.params.id,
@@ -33,13 +36,16 @@ export const updateEmployment = async (req:express.Request, res:express.Response
   } catch (error) {
     res.status(400).json({ error: 'Bad request' });
   }
-};
+});
 
-export const deleteEmployment = async (req:express.Request, res:express.Response) => {
+router.delete('/delete_employments/:id', isAuthenticated,async (req:express.Request, res:express.Response) => {
   try {
     await Employment.findByIdAndDelete(req.params.id);
     res.json({ message: 'Employment details deleted successfully' });
   } catch (error) {
     res.status(400).json({ error: 'Bad request' });
   }
-};
+});
+
+
+module.exports = router;

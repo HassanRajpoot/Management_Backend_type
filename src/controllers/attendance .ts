@@ -1,8 +1,10 @@
 import express from 'express';
 import { Attendance } from '../db/employee';
+import { isAuthenticated } from '../middleware/authentication';
 
+const router = express.Router();
 // Create attendance record
-export const CreateAttendance = async (req:express.Request, res:express.Response) => {
+router.post('/new' ,isAuthenticated, async (req:express.Request, res:express.Response) => {
   try {
     const attendanceData = req.body; // Assuming the request body contains the attendance data
     const attendance = await Attendance.create(attendanceData);
@@ -10,20 +12,20 @@ export const CreateAttendance = async (req:express.Request, res:express.Response
   } catch (error) {
     res.status(500).json({ error: 'Error creating attendance record' });
   }
-}; 
+}); 
 
 // Read attendance records
-export const ReadAttendance = async (req:express.Request, res:express.Response) => {
+router.get('/read_attendance',isAuthenticated,async (req:express.Request, res:express.Response) => {
   try {
     const attendanceRecords = await Attendance.find().populate('employeeId');
     res.status(200).json(attendanceRecords);
   } catch (error) {
     res.status(500).json({ error: 'Error fetching attendance records' });
   }
-};
+});
 
 // Update attendance record
-export const UpdateAttendance = async (req:express.Request, res:express.Response) => {
+router.put('/:id', isAuthenticated,async (req:express.Request, res:express.Response) => {
   try {
     const attendanceId = req.params.id;
     const updatedData = req.body;
@@ -32,10 +34,10 @@ export const UpdateAttendance = async (req:express.Request, res:express.Response
   } catch (error) {
     res.status(500).json({ error: 'Error updating attendance record' });
   }
-};
+});
 
 // Delete attendance record
-export const DeleteAttendance = async (req:express.Request, res:express.Response) => {
+router.delete('/delete_attendance/:id', isAuthenticated,async (req:express.Request, res:express.Response) => {
   try {
     const attendanceId = req.params.id;
     await Attendance.findByIdAndDelete(attendanceId);
@@ -43,4 +45,5 @@ export const DeleteAttendance = async (req:express.Request, res:express.Response
   } catch (error) {
     res.status(500).json({ error: 'Error deleting attendance record' });
   }
-};
+});
+module.exports = router;
