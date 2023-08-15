@@ -201,21 +201,31 @@ app.delete('/employement/delete_employments/:id', isAuthenticated, async (req: e
     res.status(400).json({ error: 'Bad request' });
   }
 });
+
 app.post('/leaves/new', isAuthenticated, async (req: express.Request, res: express.Response) => {
   try {
     const { employeeId, date, checkInTime, checkOutTime } = req.body;
 
-    // Calculate the duration in hours for the attendance
-    const durationInHours = (checkOutTime - checkInTime) / (1000 * 60 * 60);
+    const checkInTimestamp = Date.parse(checkInTime);
+    const checkOutTimestamp = Date.parse(checkOutTime);
 
-    // Fetch the employee's leave balance
+    // Calculate the difference in milliseconds
+    const timeDifferenceMs = checkOutTimestamp - checkInTimestamp;
+
+    // Calculate the duration in hours
+    const durationInHours = Math.floor(timeDifferenceMs / (1000 * 60 * 60*24));
+    // Find the employee by ID
     const employee = await Employee.findById(employeeId);
 
-    // Calculate the number of leaves to deduct based on attendance duration
-    const leavesToDeduct = Math.ceil(durationInHours / 8);
+    if (!employee) {
+      return res.status(404).json({ error: 'Employee not found' });
+    }
 
-    // Ensure the leave balance is not negative
-    if (leavesToDeduct <= employee.numberLeaves) {
+    // Calculate the number of leaves to deduct based on attendance duration
+    const leavesToDeduct = durationInHours;
+
+    // Check if the leave balance is sufficient
+    if (employee.numberLeaves >= leavesToDeduct) {
       // Create the attendance record
       const newAttendance = await Attendance.create(req.body);
 
@@ -229,14 +239,15 @@ app.post('/leaves/new', isAuthenticated, async (req: express.Request, res: expre
         updatedEmployee: employee,
       });
     } else {
-      res.status(400).json({ error: 'Insufficient leave balance' });
+      res.status(400).json({ message:employee.numberLeaves,
+      attendance:durationInHours });
     }
   } catch (error) {
     res.status(400).json({ error: 'Bad request' });
   }
 });
 
-app.get('/notification/new', isAuthenticated, async (req: express.Request, res: express.Response) => {
+app.post('/notification/new', isAuthenticated, async (req: express.Request, res: express.Response) => {
   try {
     const notificationData = req.body; // Assuming the request body contains the notification data
     const notification = await Notification.create(notificationData);
@@ -247,7 +258,7 @@ app.get('/notification/new', isAuthenticated, async (req: express.Request, res: 
 });
 
 // Read notifications
-app.post('/notification/all', isAuthenticated, async (req: express.Request, res: express.Response) => {
+app.get('/notification/all', isAuthenticated, async (req: express.Request, res: express.Response) => {
   try {
     const notificationRecords = await Notification.find().populate('employeeId');
     res.status(200).json(notificationRecords);

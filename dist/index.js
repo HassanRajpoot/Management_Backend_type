@@ -211,14 +211,21 @@ exports.app.delete('/employement/delete_employments/:id', authentication_1.isAut
 exports.app.post('/leaves/new', authentication_1.isAuthenticated, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const { employeeId, date, checkInTime, checkOutTime } = req.body;
-        // Calculate the duration in hours for the attendance
-        const durationInHours = (checkOutTime - checkInTime) / (1000 * 60 * 60);
-        // Fetch the employee's leave balance
+        const checkInTimestamp = Date.parse(checkInTime);
+        const checkOutTimestamp = Date.parse(checkOutTime);
+        // Calculate the difference in milliseconds
+        const timeDifferenceMs = checkOutTimestamp - checkInTimestamp;
+        // Calculate the duration in hours
+        const durationInHours = Math.floor(timeDifferenceMs / (1000 * 60 * 60 * 24));
+        // Find the employee by ID
         const employee = yield employee_2.Employee.findById(employeeId);
+        if (!employee) {
+            return res.status(404).json({ error: 'Employee not found' });
+        }
         // Calculate the number of leaves to deduct based on attendance duration
-        const leavesToDeduct = Math.ceil(durationInHours / 8);
-        // Ensure the leave balance is not negative
-        if (leavesToDeduct <= employee.numberLeaves) {
+        const leavesToDeduct = durationInHours;
+        // Check if the leave balance is sufficient
+        if (employee.numberLeaves >= leavesToDeduct) {
             // Create the attendance record
             const newAttendance = yield employee_1.Attendance.create(req.body);
             // Update the employee's leave balance
@@ -231,14 +238,15 @@ exports.app.post('/leaves/new', authentication_1.isAuthenticated, (req, res) => 
             });
         }
         else {
-            res.status(400).json({ error: 'Insufficient leave balance' });
+            res.status(400).json({ message: employee.numberLeaves,
+                attendance: durationInHours });
         }
     }
     catch (error) {
         res.status(400).json({ error: 'Bad request' });
     }
 }));
-exports.app.get('/notification/new', authentication_1.isAuthenticated, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+exports.app.post('/notification/new', authentication_1.isAuthenticated, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const notificationData = req.body; // Assuming the request body contains the notification data
         const notification = yield employee_3.Notification.create(notificationData);
@@ -249,7 +257,7 @@ exports.app.get('/notification/new', authentication_1.isAuthenticated, (req, res
     }
 }));
 // Read notifications
-exports.app.post('/notification/all', authentication_1.isAuthenticated, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+exports.app.get('/notification/all', authentication_1.isAuthenticated, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const notificationRecords = yield employee_3.Notification.find().populate('employeeId');
         res.status(200).json(notificationRecords);
